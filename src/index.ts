@@ -11,7 +11,7 @@ import { MyContext } from './types';
 const main = async () => {
 	const orm = await MikroORM.init(mikroConfig);
 	orm.getMigrator().up();
-
+	
 	const app = express();
 
 	const apolloServer = new ApolloServer({
@@ -19,7 +19,7 @@ const main = async () => {
 			resolvers: [HelloResolver, PostResolver],
 			validate: false
 		}),
-		context: (): MyContext => ({em: orm.em.fork()})
+		context: (): MyContext => ({em: orm.em.fork()}),
 	});
 
 	await apolloServer.start();
