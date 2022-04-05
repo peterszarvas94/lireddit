@@ -15,7 +15,7 @@ export class PostResolver {
 	}
 
 	@Mutation(() => Post)
-	async createpost(
+	async createPost(
 		@Arg("title") title: string,
 		@Ctx() { em }: MyContext
 	): Promise<Post> {
@@ -39,5 +39,14 @@ export class PostResolver {
 			await em.persistAndFlush(post);
 		}
 		return post;
+	}
+
+	@Mutation(() => Boolean)
+	async deletPost(
+		@Arg("id") id: string,
+		@Ctx() { em }: MyContext
+	): Promise<boolean> {
+		await em.nativeDelete(Post, {id})
+		return true;
 	}
 }
