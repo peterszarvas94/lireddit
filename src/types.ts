@@ -1,8 +1,16 @@
-import { EntityManager } from "@mikro-orm/core"
-import { Request, Response } from "express"
+import { EntityManager } from "@mikro-orm/core";
+import { Request, Response } from "express";
+import "express-session";
+import { Session } from "express-session";
+declare module "express-session" {
+  interface SessionData {
+    userId: string;
+  }
+}
 
 export type MyContext = {
   em: EntityManager;
-  req: Request;
+  req: Request & {session?: Session};
   res: Response;
 }
+

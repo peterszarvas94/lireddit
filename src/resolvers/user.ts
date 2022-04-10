@@ -5,6 +5,7 @@ import {
 	InputType,
 	Mutation,
 	ObjectType,
+	Query,
 	Resolver,
 } from "type-graphql";
 import { User } from "../entities/User";
@@ -39,10 +40,21 @@ class UserResponse {
 
 @Resolver()
 export class UserResolver {
+	@Query(() => User, { nullable: true })
+	async me(@Ctx() { em, req }: MyContext) {
+		if (!req.session.userId) {
+			return null;
+		}
+		console.log(req.session.userId);
+
+		const user = await em.findOne(User, { id: req.session.userId });
+		return user;
+	}
+
 	@Mutation(() => UserResponse)
 	async regitster(
 		@Arg("options") options: UsernamePasswordInput,
-		@Ctx() { em }: MyContext
+		@Ctx() { em, req }: MyContext
 	): Promise<UserResponse> {
 		if (options.username.length <= 2) {
 			return {
@@ -89,15 +101,16 @@ export class UserResolver {
 				};
 			}
 		}
-		return {
-			user,
-		};
+		//login the user the same time as they register
+		req.session.userId = user.id;
+
+		return { user };
 	}
 
 	@Mutation(() => UserResponse)
 	async login(
 		@Arg("options") options: UsernamePasswordInput,
-		@Ctx() { em }: MyContext
+		@Ctx() { em, req }: MyContext
 	): Promise<UserResponse> {
 		const user = await em.findOne(User, { username: options.username });
 		if (!user) {
@@ -122,8 +135,8 @@ export class UserResolver {
 			};
 		}
 
-		return {
-			user,
-		};
+		req.session.userId = user.id;
+
+		return { user };
 	}
 }
