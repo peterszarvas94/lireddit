@@ -12,7 +12,6 @@ import session from "express-session";
 import connectRedis from "connect-redis";
 import { __prod__ } from "./constants";
 import { MyContext } from "./types";
-// import cors from 'cors';
 
 const main = async () => {
 	const orm = await MikroORM.init(mikroConfig);
