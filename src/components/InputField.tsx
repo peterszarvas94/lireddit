@@ -1,3 +1,4 @@
+import { WarningIcon } from "@chakra-ui/icons";
 import {
 	FormControl,
 	FormLabel,
@@ -24,7 +25,7 @@ const InputField = ({ label, size: _, ...props }: InputFieldProps) => {
 				id={field.name}
 				placeholder={props.placeholder}
 			/>
-			{error ? <FormErrorMessage>{error}</FormErrorMessage> : null}
+			{error ? <FormErrorMessage><WarningIcon mr={1}/>{error}</FormErrorMessage> : null}
 		</FormControl>
 	);
 };
