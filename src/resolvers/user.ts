@@ -11,6 +11,7 @@ import {
 import { User } from "../entities/User";
 import { MyContext } from "../types";
 import argon2 from "argon2";
+// import { EntityManager } from "@mikro-orm/postgresql";
 
 @InputType()
 class UsernamePasswordInput {
@@ -54,7 +55,7 @@ export class UserResolver {
 	}
 
 	@Mutation(() => UserResponse)
-	async regitster(
+	async register(
 		@Arg("options") options: UsernamePasswordInput,
 		@Ctx() { em, req }: MyContext
 	): Promise<UserResponse> {
@@ -86,7 +87,21 @@ export class UserResolver {
 			password: hashedPassword,
 		});
 
+		// let user;
 		try {
+			// const result = await (em as EntityManager)
+			// 	.createQueryBuilder(User)
+			// 	.getKnexQuery()
+			// 	.insert({
+			// 		username: options.username,
+			// 		password: hashedPassword,
+			// 		created_at: new Date(),
+			// 		updated_at: new Date(),
+			// 	})
+			// 	.returning("*");
+
+			// user = result[0];
+
 			await em.persistAndFlush(user);
 		} catch (err) {
 			//duplicate username error
@@ -140,5 +155,19 @@ export class UserResolver {
 		req.session.userId = user.id;
 
 		return { user };
+	}
+
+	@Query(() => [User])
+	users(@Ctx() { em }: MyContext): Promise<User[]> {
+		return em.find(User, {});
+	}
+
+	@Mutation(() => Boolean)
+	async deleteUser(
+		@Arg("id") id: string,
+		@Ctx() { em }: MyContext
+	): Promise<boolean> {
+		await em.nativeDelete(User, { id });
+		return true;
 	}
 }
