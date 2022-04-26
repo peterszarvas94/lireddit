@@ -11,6 +11,7 @@ import {
 import { User } from "../entities/User";
 import { MyContext } from "../types";
 import argon2 from "argon2";
+import { COOKIE_NAME } from "../constants";
 // import { EntityManager } from "@mikro-orm/postgresql";
 
 @InputType()
@@ -169,5 +170,29 @@ export class UserResolver {
 	): Promise<boolean> {
 		await em.nativeDelete(User, { id });
 		return true;
+	}
+
+	@Mutation(() => Boolean)
+	async logout(@Ctx() { req, res }: MyContext) {
+		return new Promise((resolve) =>
+			req.session.destroy((err) => {
+				res.clearCookie(COOKIE_NAME);
+				if (err) {
+					console.log(err);
+					resolve(false);
+					return;
+				}
+				resolve(true);
+ 			})
+		);
+
+		// req.session.destroy((err) => {
+		// 	res.clearCookie(COOKIE_NAME);
+		// 	if (err) {
+		// 		console.log(err);
+		// 		return false;
+		// 	}
+		// 	return true;
+		// });
 	}
 }
