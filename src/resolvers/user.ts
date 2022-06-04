@@ -97,8 +97,10 @@ export class UserResolver {
 	@Mutation(() => Boolean)
 	async forgotPassword(
 		@Arg("email") email: string,
-		@Ctx() { em, redis }: MyContext
+		@Ctx() { em, redis, res }: MyContext
 	) {
+		res.clearCookie(COOKIE_NAME);
+
 		const user = await em.findOne(User, { email });
 		if (!user) {
 			//the email is not in the db
@@ -136,8 +138,10 @@ export class UserResolver {
 	@Mutation(() => UserResponse)
 	async register(
 		@Arg("options") options: UsernamePasswordInput,
-		@Ctx() { em, req }: MyContext
+		@Ctx() { em, req, res }: MyContext
 	): Promise<UserResponse> {
+		res.clearCookie(COOKIE_NAME);
+
 		const errors = validateRegister(options);
 		if (errors) {
 			return { errors };
@@ -191,8 +195,10 @@ export class UserResolver {
 	async login(
 		@Arg("usernameOrEmail") usernameOrEmail: string,
 		@Arg("password") password: string,
-		@Ctx() { em, req }: MyContext
+		@Ctx() { em, req, res }: MyContext
 	): Promise<UserResponse> {
+		res.clearCookie(COOKIE_NAME);
+
 		const user = await em.findOne(
 			User,
 			usernameOrEmail.includes("@")
