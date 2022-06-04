@@ -10,7 +10,11 @@ import {
 import { User } from "../entities/User";
 import { MyContext } from "../types";
 import argon2 from "argon2";
-import { COOKIE_NAME, FORGET_PASSWORD_PREFIX, FRONTEND_SERVER } from "../constants";
+import {
+	COOKIE_NAME,
+	FORGET_PASSWORD_PREFIX,
+	FRONTEND_SERVER,
+} from "../constants";
 import { UsernamePasswordInput } from "./UsernamePasswordInput";
 import { validateRegister } from "../utils/validateRegister";
 import { sendEmail } from "../utils/sendEmail";
@@ -38,6 +42,58 @@ class UserResponse {
 
 @Resolver()
 export class UserResolver {
+	@Mutation(() => UserResponse)
+	async changePassword(
+		@Arg("token") token: string,
+		@Arg("newPassword") newPassword: string,
+		@Ctx() { redis, em, req }: MyContext
+	): Promise<UserResponse> {
+		if (newPassword.length <= 2) {
+			return {
+				errors: [
+					{
+						field: "newPassword",
+						message: "length must be greated than 2",
+					},
+				],
+			};
+		}
+
+		const key = FORGET_PASSWORD_PREFIX + token;
+		const userId = await redis.get(key);
+		if (!userId) {
+			return {
+				errors: [
+					{
+						field: "token",
+						message: "token expired",
+					},
+				],
+			};
+		}
+
+		const user = await em.findOne(User, { id: userId });
+		if (!user) {
+			return {
+				errors: [
+					{
+						field: "token",
+						message: "user no longer exists",
+					},
+				],
+			};
+		}
+
+		user.password = await argon2.hash(newPassword);
+		em.persistAndFlush(user);
+		redis.del(key);
+
+		// log in user after change password
+		req.session.userId = user.id;
+
+		return { user };
+	}
+
 	@Mutation(() => Boolean)
 	async forgotPassword(
 		@Arg("email") email: string,
