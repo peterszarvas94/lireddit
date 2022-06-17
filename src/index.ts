@@ -1,6 +1,4 @@
 import "reflect-metadata";
-import { MikroORM } from "@mikro-orm/core";
-import mikroConfig from "./mikro-orm.config";
 import express from "express";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
@@ -13,10 +11,13 @@ import connectRedis from "connect-redis";
 import { COOKIE_NAME, FRONTEND_SERVER, __prod__ } from "./constants";
 import { MyContext } from "./types";
 import cors from "cors";
+import { myDataSource } from "./utils/myDataSource";
 
 const main = async () => {
-	const orm = await MikroORM.init(mikroConfig);
-	orm.getMigrator().up();
+
+	await myDataSource.initialize();
+	// const conn = await myDataSource.initialize();
+	// conn.migrations();
 
 	const app = express();
 
@@ -59,7 +60,11 @@ const main = async () => {
 			resolvers: [HelloResolver, PostResolver, UserResolver],
 			validate: false,
 		}),
-		context: ({ req, res }): MyContext => ({ em: orm.em.fork(), req, res, redis }),
+		context: ({ req, res }): MyContext => ({
+			req,
+			res,
+			redis,
+		}),
 	});
 
 	await apolloServer.start();
