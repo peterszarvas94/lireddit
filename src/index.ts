@@ -42,14 +42,14 @@ const main = async () => {
 				maxAge: 1000 * 60 * 60 * 24 * 365 * 10, // 10 years
 
 				// ! for font-end to work
-				// httpOnly: true,
-				// sameSite: "lax", // csrf
-				// secure: __prod__, // cookie only works in https
+				httpOnly: true,
+				sameSite: "lax", // csrf
+				secure: __prod__, // cookie only works in https
 
 				// ! for apollo sandbox to work:
-				httpOnly: false,
-				sameSite: "none",
-				secure: true,
+				// httpOnly: false,
+				// sameSite: "none",
+				// secure: true,
 			},
 			secret: "qwizhieuafbkjdnvoisdksowesd",
 			resave: false,
