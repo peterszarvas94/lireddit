@@ -15,10 +15,11 @@ import { myDataSource } from "./utils/myDataSource";
 
 const main = async () => {
 
-	// await myDataSource.initialize();
-	const conn = await myDataSource.initialize()
-	// not working...
-	conn.runMigrations();
+	await myDataSource.initialize();
+
+	// ? triggering migration:
+	// const conn = await myDataSource.initialize()
+	// await conn.runMigrations();
 
 	const app = express();
 
