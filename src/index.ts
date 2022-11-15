@@ -12,14 +12,17 @@ import { COOKIE_NAME, FRONTEND_SERVER, __prod__ } from "./constants";
 import { MyContext } from "./types";
 import cors from "cors";
 import { myDataSource } from "./utils/myDataSource";
+// import { Post } from "./entities/Post";
+// import { ApolloServerPluginLandingPageGraphQLPlayground } from "apollo-server-core";
 
 const main = async () => {
-
 	await myDataSource.initialize();
 
-	// ? triggering migration:
+	// ! triggering migration:
 	// const conn = await myDataSource.initialize()
 	// await conn.runMigrations();
+
+	// await Post.delete({})
 
 	const app = express();
 
@@ -71,6 +74,7 @@ const main = async () => {
 			res,
 			redis,
 		}),
+		// plugins: [ApolloServerPluginLandingPageGraphQLPlayground()],
 	});
 
 	await apolloServer.start();

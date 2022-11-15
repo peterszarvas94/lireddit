@@ -6,6 +6,7 @@ import {
 	InputType,
 	Int,
 	Mutation,
+	ObjectType,
 	Query,
 	Resolver,
 	Root,
@@ -24,26 +25,34 @@ class PostInput {
 	text: string;
 }
 
+@ObjectType()
+class PaginatedPosts {
+	@Field(() => [Post])
+	posts: Post[];
+	@Field()
+	hasMore: boolean;
+}
+
 @Resolver(() => Post)
 export class PostResolver {
-
 	@FieldResolver(() => String)
 	textSnippet(@Root() root: Post) {
 		return root.text.slice(0, 50);
 	}
 
-	@Query(() => [Post])
+	@Query(() => PaginatedPosts)
 	async posts(
 		@Arg("limit", () => Int) limit: number,
 		@Arg("cursor", () => String, { nullable: true }) cursor: string | null
-	): Promise<Post[]> {
+	): Promise<PaginatedPosts> {
+		// user asks for 20 -> we check next 21 posts
 		const realLimit = Math.min(50, limit);
-
+		const realLimitPlusOne = realLimit + 1;
 		const qb = myDataSource
 			.getRepository(Post)
 			.createQueryBuilder("p")
 			.orderBy('"createdAt"', "DESC")
-			.take(realLimit);
+			.take(realLimitPlusOne);
 
 		if (cursor) {
 			qb.where('"createdAt" < :cursor', {
@@ -51,7 +60,12 @@ export class PostResolver {
 			});
 		}
 
-		return qb.getMany();
+		const posts = await qb.getMany();
+		
+		return {
+			posts: posts.slice(0, realLimit),
+			hasMore: posts.length === realLimitPlusOne,
+		};
 	}
 
 	@Query(() => Post, { nullable: true })
