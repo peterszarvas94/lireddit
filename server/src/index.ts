@@ -6,13 +6,12 @@ import { HelloResolver } from "./resolvers/hello";
 import { PostResolver } from "./resolvers/post";
 import { UserResolver } from "./resolvers/user";
 import Redis from "ioredis";
-import session from "express-session";
+import session, { CookieOptions } from "express-session";
 import connectRedis from "connect-redis";
 import { COOKIE_NAME, FRONTEND_SERVER, __prod__ } from "./constants";
 import { MyContext } from "./types";
 import cors from "cors";
 import { myDataSource } from "./utils/myDataSource";
-// import { Post } from "./entities/Post";
 // import { ApolloServerPluginLandingPageGraphQLPlayground } from "apollo-server-core";
 
 const main = async () => {
@@ -21,8 +20,6 @@ const main = async () => {
 	// ! triggering migration:
 	// const conn = await myDataSource.initialize()
 	// await conn.runMigrations();
-
-	// await Post.delete({})
 
 	const app = express();
 
@@ -36,6 +33,23 @@ const main = async () => {
 		})
 	);
 
+	let frontend: Boolean = true;
+
+	// frontend = false;
+	
+	const cookieSettings: CookieOptions = frontend
+		? {
+				// ! for font-end to work
+				httpOnly: true,
+				sameSite: "lax", // csrf
+				secure: __prod__, // cookie only works in https
+		  }
+		: {
+				httpOnly: false,
+				sameSite: "none",
+				secure: true,
+		  };
+
 	app.use(
 		session({
 			name: COOKIE_NAME,
@@ -45,16 +59,7 @@ const main = async () => {
 			}),
 			cookie: {
 				maxAge: 1000 * 60 * 60 * 24 * 365 * 10, // 10 years
-
-				// ! for font-end to work
-				httpOnly: true,
-				sameSite: "lax", // csrf
-				secure: __prod__, // cookie only works in https
-
-				// ! for apollo sandbox to work:
-				// httpOnly: false,
-				// sameSite: "none",
-				// secure: true,
+				...cookieSettings
 			},
 			secret: "qwizhieuafbkjdnvoisdksowesd",
 			resave: false,

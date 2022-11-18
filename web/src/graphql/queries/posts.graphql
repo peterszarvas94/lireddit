@@ -7,7 +7,12 @@ query Posts($cursor: String, $limit: Int!) {
 			updatedAt
 			title
 			textSnippet
+			text
 			creatorId
+			creator {
+				id
+				username
+			}
 		}
 	}
 }
