@@ -7,6 +7,8 @@ import { isServer } from "../utils/isServer";
 const NavBar = ({}) => {
 	const [{ fetching: logoutFetching }, logout] = useLogoutMutation();
 	const [{ data, fetching }] = useMeQuery({
+		// fetch user from server (with cookie), or from cache
+		// from cache:
 		pause: isServer(),
 	});
 	let body = null;
