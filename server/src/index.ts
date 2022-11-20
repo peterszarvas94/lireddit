@@ -45,6 +45,7 @@ const main = async () => {
 				secure: __prod__, // cookie only works in https
 		  }
 		: {
+				// ! for apollo playgound to work
 				httpOnly: false,
 				sameSite: "none",
 				secure: true,
