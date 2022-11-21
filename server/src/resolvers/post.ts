@@ -52,7 +52,7 @@ export class PostResolver {
 		const realValue = isUpdoot ? 1 : -1;
 		const { userId } = req.session;
 
-		if(!userId) {
+		if (!userId) {
 			return false;
 		}
 
@@ -204,8 +204,8 @@ export class PostResolver {
 	}
 
 	@Query(() => Post, { nullable: true })
-	post(@Arg("id") id: number): Promise<Post | null> {
-		return Post.findOne({ where: { id } });
+	post(@Arg("id", () => Int) id: number): Promise<Post | null> {
+		return Post.findOne({ where: { id }, relations: ["creator"] });
 	}
 
 	@Mutation(() => Post)
