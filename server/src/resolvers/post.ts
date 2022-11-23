@@ -57,26 +57,28 @@ export class PostResolver {
 		}
 
 		const updoot = await Updoot.findOne({ where: { postId, userId } });
-
-		// await myDataSource.transaction(async (tm) => {
-		// 	await tm.query(
-		// 		`
-		// 		update updoot
-		// 		set value = $1
-		// 		where "postId" = $2 and "userId" = $3
-		// 		`,
-		// 		[0, postId, userId]
-		// 	);
-		// 	await tm.query(
-		// 		`
-		// 		update post
-		// 		set points = $1
-		// 		where id = $2
-		// 		`,
-		// 		[0, postId]
-		// 	);
-		// });
-		// return true;
+		
+		/*
+		await myDataSource.transaction(async (tm) => {
+			await tm.query(
+				`
+				update updoot
+				set value = $1
+				where "postId" = $2 and "userId" = $3
+				`,
+				[0, postId, userId]
+			);
+			await tm.query(
+				`
+				update post
+				set points = $1
+				where id = $2
+				`,
+				[0, postId]
+			);
+		});
+		return true;
+		*/
 
 		//user has already voted on this post before,
 		//and they are changing their vote:
@@ -221,19 +223,25 @@ export class PostResolver {
 	}
 
 	@Mutation(() => Post, { nullable: true })
+	@UseMiddleware(isAuth)
 	async updatePost(
-		@Arg("id") id: number,
-		@Arg("title", () => String, { nullable: true }) title: string
+		@Arg("id", () => Int) id: number,
+		@Arg("title") title: string,
+		@Arg("text") text: string,
+		@Ctx() { req }: MyContext
 	): Promise<Post | null> {
-		const post = await Post.findOne({ where: { id } });
-		if (!post) {
-			return null;
-		}
-		if (typeof title !== undefined) {
-			post.title = title;
-			Post.update({ id }, { title });
-		}
-		return post;
+		const result = await myDataSource
+			.createQueryBuilder()
+			.update(Post)
+			.set({ title, text })
+			.where('id = :id and "creatorId" = :creatorId', {
+				id,
+				creatorId: req.session.userId,
+			})
+			.returning("*")
+			.execute();
+
+		return result.raw[0];
 	}
 
 	@Mutation(() => Boolean)
