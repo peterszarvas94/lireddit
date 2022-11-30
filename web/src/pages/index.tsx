@@ -21,14 +21,19 @@ const Index = () => {
 		limit: 15,
 		cursor: null as null | string,
 	});
-	const [{ data, fetching }] = usePostsQuery({
+	const [{ data, error, fetching }] = usePostsQuery({
 		variables,
 	});
 
 	// console.log("variables: ", variables);
 
 	if (!fetching && !data) {
-		return <div>query failed at index.ts</div>;
+		return (
+			<div>
+				<div>query failed at index.ts</div>
+				<div>{error?.message}</div>
+			</div>
+		);
 	}
 
 	return (

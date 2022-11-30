@@ -12,6 +12,7 @@ import { COOKIE_NAME, FRONTEND_SERVER, __prod__ } from "./constants";
 import { MyContext } from "./types";
 import cors from "cors";
 import { myDataSource } from "./utils/myDataSource";
+import { createUserLoader } from "./utils/createUserLoader";
 // import { ApolloServerPluginLandingPageGraphQLPlayground } from "apollo-server-core";
 
 const main = async () => {
@@ -79,6 +80,7 @@ const main = async () => {
 			req,
 			res,
 			redis,
+			userLoader: createUserLoader(),
 		}),
 		// plugins: [ApolloServerPluginLandingPageGraphQLPlayground()],
 	});
