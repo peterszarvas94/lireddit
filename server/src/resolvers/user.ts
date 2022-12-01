@@ -15,7 +15,6 @@ import argon2 from "argon2";
 import {
 	COOKIE_NAME,
 	FORGET_PASSWORD_PREFIX,
-	FRONTEND_SERVER,
 } from "../constants";
 import { UsernamePasswordInput } from "./UsernamePasswordInput";
 import { validateRegister } from "../utils/validateRegister";
@@ -132,9 +131,10 @@ export class UserResolver {
 			1000 * 60 * 60 * 24 * 3
 		); // 3 days
 
+		//will not work in prod in this form, ofc... need to set up an email provider
 		sendEmail(
 			email,
-			`<a href="${FRONTEND_SERVER}/change-password/${token}">reset password</a>`
+			`<a href="${process.env.CORS_ORIGIN}/change-password/${token}">reset password</a>`
 		);
 
 		return true;

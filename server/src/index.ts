@@ -1,19 +1,19 @@
-import "reflect-metadata";
-import express from "express";
 import { ApolloServer } from "apollo-server-express";
+import connectRedis from "connect-redis";
+import cors from "cors";
+import express from "express";
+import session from "express-session";
+import Redis from "ioredis";
+import "reflect-metadata";
 import { buildSchema } from "type-graphql";
+import { COOKIE_NAME, __prod__ } from "./constants";
 import { HelloResolver } from "./resolvers/hello";
 import { PostResolver } from "./resolvers/post";
 import { UserResolver } from "./resolvers/user";
-import Redis from "ioredis";
-import session, { CookieOptions } from "express-session";
-import connectRedis from "connect-redis";
-import { COOKIE_NAME, FRONTEND_SERVER, __prod__ } from "./constants";
 import { MyContext } from "./types";
-import cors from "cors";
-import { myDataSource } from "./utils/myDataSource";
-import { createUserLoader } from "./utils/createUserLoader";
 import { createUpdootLoader } from "./utils/createUpdootLoader";
+import { createUserLoader } from "./utils/createUserLoader";
+import { myDataSource } from "./utils/myDataSource";
 // import { ApolloServerPluginLandingPageGraphQLPlayground } from "apollo-server-core";
 
 const main = async () => {
@@ -26,32 +26,18 @@ const main = async () => {
 	const app = express();
 
 	const RedisStore = connectRedis(session);
-	const redis = new Redis();
+	const redis = new Redis(process.env.REDIS_URL);
+
+	let playground: Boolean = false;
 
 	app.use(
 		cors({
-			origin: ["https://studio.apollographql.com", `${FRONTEND_SERVER}`],
+			origin: playground
+				? ["https://studio.apollographql.com"]
+				: [process.env.CORS_ORIGIN],
 			credentials: true,
 		})
 	);
-
-	let frontend: Boolean = true;
-
-	// frontend = false;
-
-	const cookieSettings: CookieOptions = frontend
-		? {
-				// ! for font-end to work
-				httpOnly: true,
-				sameSite: "lax", // csrf
-				secure: __prod__, // cookie only works in https
-		  }
-		: {
-				// ! for apollo playgound to work
-				httpOnly: false,
-				sameSite: "none",
-				secure: true,
-		  };
 
 	app.use(
 		session({
@@ -62,9 +48,12 @@ const main = async () => {
 			}),
 			cookie: {
 				maxAge: 1000 * 60 * 60 * 24 * 365 * 10, // 10 years
-				...cookieSettings,
+				httpOnly: !playground,
+				sameSite: playground ? "none" : "lax",
+				secure: playground ? true : __prod__,
+				domain: __prod__ ? ".playingdeer.hu" : undefined,
 			},
-			secret: "qwizhieuafbkjdnvoisdksowesd",
+			secret: process.env.SESSION_SECRET,
 			resave: false,
 			saveUninitialized: false,
 		})
@@ -99,7 +88,7 @@ const main = async () => {
 	// 	},
 	// });
 
-	app.listen(4000, () => {
+	app.listen(parseInt(process.env.PORT), () => {
 		console.log("server started on localhost:4000");
 	});
 };

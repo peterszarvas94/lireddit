@@ -1,3 +1,4 @@
+import "dotenv-safe/config";
 import { DataSource } from "typeorm";
 import { Post } from "../entities/Post";
 import { User } from "../entities/User";
@@ -12,9 +13,7 @@ if (require.main) {
 
 export const myDataSource = new DataSource({
 	type: "postgres",
-	database: "lireddit2",
-	username: "postgres",
-	password: "postgres",
+	url: process.env.DATABASE_URL,
 	logging: true,
 	synchronize: true,
 	migrations: [myPath],
