@@ -23,9 +23,6 @@ const UpDootSection = ({ post }: Props) => {
 		>
 			<IconButton
 				onClick={async () => {
-					if (post.voteStatus === 1) {
-						return;
-					}
 					setLoadingState("updoot-loading");
 					await vote({
 						postId: post.id,
@@ -41,9 +38,6 @@ const UpDootSection = ({ post }: Props) => {
 			{post.points}
 			<IconButton
 				onClick={async () => {
-					if (post.voteStatus === -1) {
-						return;
-					}
 					setLoadingState("downdoot-loading");
 					await vote({
 						postId: post.id,

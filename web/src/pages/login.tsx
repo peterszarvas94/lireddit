@@ -1,4 +1,3 @@
-import React from "react";
 import { Form, Formik } from "formik";
 import Wrapper from "../components/Wrapper";
 import InputField from "../components/InputField";

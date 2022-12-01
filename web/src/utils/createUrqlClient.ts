@@ -1,4 +1,4 @@
-import { cacheExchange, Resolver } from "@urql/exchange-graphcache";
+import { Cache, cacheExchange, Resolver } from "@urql/exchange-graphcache";
 import {
 	Exchange,
 	dedupExchange,
@@ -81,61 +81,37 @@ const cursorPagination = (/*, mergeMode = "after",*/): Resolver => {
 		};
 
 		return obj;
-
-		/*
-		const visited = new Set();
-		let result: NullArray<string> = [];
-		let prevOffset: number | null = null;
-
-		for (let i = 0; i < size; i++) {
-			const { fieldKey, arguments: args } = fieldInfos[i];
-			if (args === null || !compareArgs(fieldArgs, args)) {
-				continue;
-			}
-
-			const links = cache.resolve(entityKey, fieldKey) as string[];
-			const currentOffset = args[cursorArgument];
-
-			if (
-				links === null ||
-				links.length === 0 ||
-				typeof currentOffset !== "number"
-			) {
-				continue;
-			}
-
-			const tempResult: NullArray<string> = [];
-
-			for (let j = 0; j < links.length; j++) {
-				const link = links[j];
-				if (visited.has(link)) continue;
-				tempResult.push(link);
-				visited.add(link);
-			}
-
-			if (
-				(!prevOffset || currentOffset > prevOffset) ===
-				(mergeMode === "after")
-			) {
-				result = [...result, ...tempResult];
-			} else {
-				result = [...tempResult, ...result];
-			}
-
-			prevOffset = currentOffset;
-		}
-
-		const hasCurrentPage = cache.resolve(entityKey, fieldName, fieldArgs);
-		if (hasCurrentPage) {
-			return result;
-		} else if (!(info as any).store.schema) {
-			return undefined;
-		} else {
-			info.partial = true;
-			return result;
-		}
-*/
 	};
+};
+
+const invalidateAllPosts = (cache: Cache) => {
+	cache
+		.inspectFields("Query")
+		.filter((field) => field.fieldName === "posts")
+		.forEach((field) => {
+			cache.invalidate("Query", "posts", field.arguments || {});
+		});
+};
+
+const updateDootCache = (
+	newPoints: number,
+	newStatus: number | null,
+	cache: Cache,
+	postId: VoteMutationVariables["postId"]
+) => {
+	cache.writeFragment(
+		gql`
+			fragment __ on Post {
+				points
+				voteStatus
+			}
+		`,
+		{
+			id: postId,
+			points: newPoints,
+			voteStatus: newStatus,
+		} as any
+	);
 };
 
 export const createUrqlClient = (ssrExchange: any, ctx: any) => {
@@ -185,32 +161,31 @@ export const createUrqlClient = (ssrExchange: any, ctx: any) => {
 								`,
 								{ id: postId } as any
 							);
+
 							if (data) {
-								if (data.voteStatus === args.value) {
-									return;
+								const { voteStatus, points } = data;
+
+								if (voteStatus === null) {
+									return updateDootCache(points + value, value, cache, postId);
 								}
-								const newPoints =
-									(data.points as number) + (!data.voteStatus ? 1 : 2) * value;
-								cache.writeFragment(
-									gql`
-										fragment __ on Post {
-											points
-											voteStatus
-										}
-									`,
-									{ id: postId, points: newPoints, voteStatus: value } as any
-								);
+								if (voteStatus === value) {
+									return updateDootCache(points - value, null, cache, postId);
+								}
+								if (value !== null && voteStatus === -value) {
+									return updateDootCache(
+										points + 2 * value,
+										value,
+										cache,
+										postId
+									);
+								}
 							}
 						},
+
 						createPost: (_result, _args, cache, _info) => {
-							const allFields = cache.inspectFields("Query");
-							const fieldInfos = allFields.filter(
-								(info) => info.fieldName === "posts"
-							);
-							fieldInfos.forEach((fi) => {
-								cache.invalidate("Query", "posts", fi.arguments || {});
-							});
+							invalidateAllPosts(cache);
 						},
+
 						logout: (result, _args, cache, _info) => {
 							betterUpdateQuery<LogoutMutation, MeQuery>(
 								cache,
@@ -218,38 +193,40 @@ export const createUrqlClient = (ssrExchange: any, ctx: any) => {
 								result,
 								() => ({ me: null })
 							);
+
+							invalidateAllPosts(cache);
 						},
 
-						//@ts-expect-error
-						login: (_result, args, cache, info) => {
+						login: (result, _args, cache, _info) => {
 							betterUpdateQuery<LoginMutation, MeQuery>(
 								cache,
 								{ query: MeDocument },
-								_result,
-								(result, query) => {
-									if (result.login.errors) {
+								result,
+								(queryResult, query) => {
+									if (queryResult.login.errors) {
 										return query;
 									} else {
 										return {
-											me: result.login.user,
+											me: queryResult.login.user,
 										};
 									}
 								}
 							);
+
+							invalidateAllPosts(cache);
 						},
 
-						//@ts-expect-error
-						register: (_result, args, cache, info) => {
+						register: (result, _args, cache, _info) => {
 							betterUpdateQuery<RegisterMutation, MeQuery>(
 								cache,
 								{ query: MeDocument },
-								_result,
-								(result, query) => {
-									if (result.register.errors) {
+								result,
+								(queryResult, query) => {
+									if (queryResult.register.errors) {
 										return query;
 									} else {
 										return {
-											me: result.register.user,
+											me: queryResult.register.user,
 										};
 									}
 								}
