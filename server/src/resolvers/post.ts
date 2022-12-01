@@ -43,11 +43,24 @@ export class PostResolver {
 	}
 
 	@FieldResolver(() => User)
-	creator(
-		@Root() post: Post,
-		@Ctx() { userLoader }: MyContext
-	) {
+	creator(@Root() post: Post, @Ctx() { userLoader }: MyContext) {
 		return userLoader.load(post.creatorId);
+	}
+
+	@FieldResolver(() => Int, { nullable: true })
+	async voteStatus(
+		@Root() post: Post,
+		@Ctx() { updootLoader, req }: MyContext
+	) {
+		if (!req.session.userId) {
+			return null;
+		}
+		const updoot = await updootLoader.load({
+			postId: post.id,
+			userId: req.session.userId,
+		});
+
+		return updoot ? updoot.value : null;
 	}
 
 	@Mutation(() => Boolean)
@@ -68,26 +81,33 @@ export class PostResolver {
 		const updoot = await Updoot.findOne({ where: { postId, userId } });
 
 		/*
-		await myDataSource.transaction(async (tm) => {
-			await tm.query(
-				`
-				update updoot
-				set value = $1
-				where "postId" = $2 and "userId" = $3
-				`,
-				[0, postId, userId]
-			);
-			await tm.query(
-				`
-				update post
-				set points = $1
-				where id = $2
-				`,
-				[0, postId]
-			);
-		});
-		return true;
+			await myDataSource.transaction(async (tm) => {
+				await tm.query(
+					`
+					update updoot
+					set value = $1
+					where "postId" = $2 and "userId" = $3
+					`,
+					[0, postId, userId]
+				);
+				await tm.query(
+					`
+					update post
+					set points = $1
+					where id = $2
+					`,
+					[0, postId]
+				);
+			});
+			return true;
 		*/
+
+		// the user has voted on the post before
+		// and they are voting the same way -> remove their vote
+		if (updoot && updoot.value === realValue) {
+			await Updoot.delete({ postId, userId });
+			await Post.update({ id: postId }, { points: () => `points - ${realValue}` });
+		}
 
 		//user has already voted on this post before,
 		//and they are changing their vote:
@@ -146,8 +166,7 @@ export class PostResolver {
 	@Query(() => PaginatedPosts)
 	async posts(
 		@Arg("limit", () => Int) limit: number,
-		@Arg("cursor", () => String, { nullable: true }) cursor: string | null,
-		@Ctx() { req }: MyContext
+		@Arg("cursor", () => String, { nullable: true }) cursor: string | null
 	): Promise<PaginatedPosts> {
 		// user asks for 20 -> we check next 21 posts
 		const realLimit = Math.min(50, limit);
@@ -155,26 +174,15 @@ export class PostResolver {
 
 		const replacements: any[] = [realLimitPlusOne];
 
-		if (req.session.userId) {
-			replacements.push(req.session.userId);
-		}
-
-		let cursorIdx = 3;
 		if (cursor) {
 			replacements.push(new Date(parseInt(cursor)));
-			cursorIdx = replacements.length;
 		}
 
 		const posts = await myDataSource.query(
 			`
-				select p.*,
-				${
-					req.session.userId
-						? '(select value from updoot where "userId" = $2 and "postId" = p.id) "voteStatus"'
-						: 'null as "voteStatus"'
-				}
+				select p.*
 				from post p
-				${cursor ? `where p."createdAt" < $${cursorIdx}` : ""}
+				${cursor ? `where p."createdAt" < $2` : ""}
 				order by p."createdAt" DESC
 				limit $1
 			`,

@@ -13,6 +13,7 @@ import { MyContext } from "./types";
 import cors from "cors";
 import { myDataSource } from "./utils/myDataSource";
 import { createUserLoader } from "./utils/createUserLoader";
+import { createUpdootLoader } from "./utils/createUpdootLoader";
 // import { ApolloServerPluginLandingPageGraphQLPlayground } from "apollo-server-core";
 
 const main = async () => {
@@ -37,7 +38,7 @@ const main = async () => {
 	let frontend: Boolean = true;
 
 	// frontend = false;
-	
+
 	const cookieSettings: CookieOptions = frontend
 		? {
 				// ! for font-end to work
@@ -61,7 +62,7 @@ const main = async () => {
 			}),
 			cookie: {
 				maxAge: 1000 * 60 * 60 * 24 * 365 * 10, // 10 years
-				...cookieSettings
+				...cookieSettings,
 			},
 			secret: "qwizhieuafbkjdnvoisdksowesd",
 			resave: false,
@@ -81,6 +82,7 @@ const main = async () => {
 			res,
 			redis,
 			userLoader: createUserLoader(),
+			updootLoader: createUpdootLoader(),
 		}),
 		// plugins: [ApolloServerPluginLandingPageGraphQLPlayground()],
 	});
