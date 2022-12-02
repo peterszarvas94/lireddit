@@ -5,6 +5,7 @@
 	"main": "index.js",
 	"watch": "tsc -w",
 	"scripts": {
+		"gen-initial-migration": "npx typeorm migration:generate ./dist/migrations -d dist/utils/myDataSource.js",
 		"gen-env": "npx gen-env-types .env -o src/env.d.ts -e .",
 		"build": "tsc",
 		"watch": "tsc -w",

@@ -17,11 +17,11 @@ import { myDataSource } from "./utils/myDataSource";
 // import { ApolloServerPluginLandingPageGraphQLPlayground } from "apollo-server-core";
 
 const main = async () => {
-	await myDataSource.initialize();
+	// await myDataSource.initialize();
 
 	// ! triggering migration:
-	// const conn = await myDataSource.initialize()
-	// await conn.runMigrations();
+	const conn = await myDataSource.initialize()
+	await conn.runMigrations()
 
 	const app = express();
 
@@ -30,6 +30,7 @@ const main = async () => {
 
 	let playground: Boolean = false;
 
+	app.set("proxy", 1);
 	app.use(
 		cors({
 			origin: playground
