@@ -13,7 +13,7 @@ const Post = () => {
 	}
 
 	if (error) {
-		console.log(error);
+		// console.log(error);
 	}
 
 	if (!data?.post) {
