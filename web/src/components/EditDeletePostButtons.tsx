@@ -9,8 +9,8 @@ interface Props {
 }
 
 const EditDeletePostButtons = ({ id, creatorId }: Props) => {
-	const [{ data: meData }] = useMeQuery();
-	const [, deletePost] = useDeletePostMutation();
+	const { data: meData } = useMeQuery();
+	const [deletePost] = useDeletePostMutation();
 
 	if (meData?.me?.id !== creatorId) {
 		return null;
@@ -32,7 +32,7 @@ const EditDeletePostButtons = ({ id, creatorId }: Props) => {
 				aria-label="delete post"
 				icon={<DeleteIcon />}
 				onClick={() => {
-					deletePost({ id });
+					deletePost({ variables: { id } });
 				}}
 			/>
 		</ButtonGroup>

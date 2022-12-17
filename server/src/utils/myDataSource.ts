@@ -25,11 +25,12 @@ const dataScorceOption : DataSourceOptions = __prod__
 	  }
 	: {
 			type: "postgres",
-			host: "localhost",
-			port: 5432,
-			username: "postgres",
-			password: "postgres",
-			database: "lireddit3",
+			// host: "localhost",
+			// port: 5432,
+			// username: "postgres",
+			// password: "postgres",
+			// database: "lireddit2",
+			url: process.env.DATABASE_URL,
 			entities: ["dist/entities/*.js"],
 			migrations: ["dist/migrations/*.js"],
 	  };

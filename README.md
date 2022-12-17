@@ -1,6 +1,6 @@
 # lireddit
 
-### [Course](https://youtu.be/I6ypD7qv3Z8?t=46988) by Ben Awad
+### [Course](https://youtu.be/I6ypD7qv3Z8?t=48295) by Ben Awad
 
 Domain on [Websupport](https://admin.websupport.hu/hu/dashboard/service/1394095)
 
