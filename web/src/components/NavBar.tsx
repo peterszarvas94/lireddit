@@ -4,6 +4,7 @@ import NextLink from "next/link";
 // import { useRouter } from "next/router";
 import { useLogoutMutation, useMeQuery } from "../generated/graphql";
 import { isServer } from "../utils/isServer";
+import { withApollo } from "../utils/withApollo";
 
 const NavBar = ({}) => {
 	const [logout, { loading: logoutFetching}] = useLogoutMutation();
@@ -69,4 +70,4 @@ const NavBar = ({}) => {
 	);
 };
 
-export default NavBar;
+export default withApollo({ ssr: false })(NavBar);

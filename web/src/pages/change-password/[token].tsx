@@ -4,7 +4,7 @@ import {
 	FormControl,
 	FormErrorMessage,
 	Link,
-	Text
+	Text,
 } from "@chakra-ui/react";
 import { Form, Formik } from "formik";
 import { NextPage } from "next";
@@ -13,10 +13,15 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 import InputField from "../../components/InputField";
 import Wrapper from "../../components/Wrapper";
-import { useChangePasswordMutation } from "../../generated/graphql";
+import {
+	MeDocument,
+	MeQuery,
+	useChangePasswordMutation,
+} from "../../generated/graphql";
 import { toErrorMap } from "../../utils/toErrorMap";
+import { withApollo } from "../../utils/withApollo";
 
-const ChangePassword: NextPage<{ token: string }> = () => {
+const ChangePassword: NextPage = () => {
 	const router = useRouter();
 
 	const [changePassword] = useChangePasswordMutation();
@@ -34,6 +39,15 @@ const ChangePassword: NextPage<{ token: string }> = () => {
 								typeof router.query.token === "string"
 									? router.query.token
 									: "",
+						},
+						update: (cache, { data }) => {
+							cache.writeQuery<MeQuery>({
+								query: MeDocument,
+								data: {
+									__typename: "Query",
+									me: data?.changePassword.user,
+								},
+							});
 						},
 					});
 
@@ -86,4 +100,4 @@ const ChangePassword: NextPage<{ token: string }> = () => {
 	);
 };
 
-export default ChangePassword;
+export default withApollo({ ssr: false })(ChangePassword);

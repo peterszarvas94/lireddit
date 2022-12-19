@@ -32,7 +32,10 @@ const EditDeletePostButtons = ({ id, creatorId }: Props) => {
 				aria-label="delete post"
 				icon={<DeleteIcon />}
 				onClick={() => {
-					deletePost({ variables: { id } });
+					deletePost({ variables: { id }, update: (cache) => {
+						// Post:1
+						cache.evict({ id: "Post:" + id });
+					} });
 				}}
 			/>
 		</ButtonGroup>

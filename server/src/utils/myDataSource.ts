@@ -10,8 +10,6 @@ export let myPath = "";
 
 if (require.main) {
 	myPath = path.join(path.dirname(require.main?.filename), "/migrations/*");
-	console.log(__prod__);
-	
 }
 
 const dataScorceOption : DataSourceOptions = __prod__

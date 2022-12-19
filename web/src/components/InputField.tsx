@@ -1,13 +1,10 @@
 import { WarningIcon } from "@chakra-ui/icons";
 import {
-	FormControl,
-	FormLabel,
-	Input,
-	FormErrorMessage,
-	Textarea,
+	FormControl, FormErrorMessage, FormLabel,
+	Input, Textarea
 } from "@chakra-ui/react";
 import { useField } from "formik";
-import React, { InputHTMLAttributes, TextareaHTMLAttributes } from "react";
+import { InputHTMLAttributes, TextareaHTMLAttributes } from "react";
 
 type InputFieldProps = InputHTMLAttributes<HTMLInputElement> &
 	TextareaHTMLAttributes<HTMLTextAreaElement> & {
